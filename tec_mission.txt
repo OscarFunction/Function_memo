@@ -1,0 +1,43 @@
+MISSION1
+ *リストラクチャリングモジュールの引数をもう一つ追加、追加した引数はIntset.
+ *内部にすべてのmodule→entryが格納されている。これは、グローバル変数にした方がいい/gb;/?
+MISSION2
+ *解析器の判別条件
+　→ IntSetに自関数が含まれているか。
+   → IntSetにcall graph上の子関数が記録されているか。
+MISSION3(TODO)
+ *現在、moduleのIntSetはリストラクチャリング毎に構築されている。よってIntSetはリストラクチャリングする度にリセットされている。
+ *プログラム的に良くないので、グローバル化してみる。
+
+
+
+テスト結果
+コンパイラオプション
+
+-c 2 -rbloop -Ss -pa -macro-task-fusion -hexconst -private-1pe-var -prof-3path -use-mt-profile-info pr_info_2 -recursive-cost 10 -default-rb-count 1 -default-loop-count 2  
+
+サンプルプログラム。
+VehicleModel_x30_ert_rtw
+
+Before
+[1]     50.0    0.00 1258.39                 pointer_analysis_wrapper [1]
+               0.00 1110.85       5/5           pointer_analysis [2]
+               0.01  144.73       5/5           def_use_var_list [21]
+               0.00    2.61       5/5           fix_lim_of_iv_and_heap [65]
+               0.00    0.09       5/5           subid_module [138]
+               0.00    0.05       5/5           mp_set_loop_var [177]
+               0.00    0.04       5/11          make_call_graph [139]
+               0.00    0.00       5/8           call_graph_wrapper [833]
+               0.00    0.00       3/26          search_const_block [820]
+After
+[1]     50.0    0.00  948.16                 pointer_analysis_wrapper [1]
+               0.00  800.64       5/5           pointer_analysis [2]
+               0.01  144.73       5/5           def_use_var_list [21]
+               0.00    2.61       5/5           fix_lim_of_iv_and_heap [65]
+               0.00    0.09       5/5           subid_module [138]
+               0.00    0.05       5/5           mp_set_loop_var [177]
+               0.00    0.04       5/11          make_call_graph [139]
+               0.00    0.00       5/8           call_graph_wrapper [833]
+               0.00    0.00       3/26          search_const_block [820]
+解析器が5回回っているので、一回分の実行時間の変化は：
+222.17s -> 160.13s

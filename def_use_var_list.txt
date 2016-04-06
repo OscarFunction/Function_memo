@@ -1,0 +1,32 @@
+def_use_var_listは解析器
+
+(1)module_tableのis_worst_caseは何を意味している？
+(2)make_var_listが非常に長い。
+(3)oprandの中のinnerとは何か、例えば、配列のA[i]が有ったとすると、innerはiの方？
+
+*これはmodule_tableを引数としている関数である。
+*ソースプログラム中の関数を出現順に辿って処理をしている。
+  ->すなわち、実装方法は簡単で、変更記録IntSetに自分の関数が記録しているかどうかを調べるだけ
+  →Yes: 解析処理
+  → No: 放置
+*まずdef_useのあらゆるテーブルを消去と再構築。
+*ここでのテーブルの対象としては、var、array、iv、heap、それぞれに対して、def、use、ref、modの四つのmapと作る。
+*def_use_operandの主な実行部分は
+  make_var_list（内容が非常に複雑であり、後日また調査する、内容的にdef_use_tableにoptを追加）
+  def_use_union(optがunionがどうかを判断し、unionの場合、unionを本体をmake_var_listする。)
+ の両方である、optのkindごとに処理内容も違ってくる。
+
+-ポインタ解析内部で呼んでいるのはdef_use_var_list、これはModule_tableを引数として、すべてのmodule内部に存在しているすべて変数をdefかuseかを識別している。
+-def_use_var_list内部の主な関数呼び出しは以下の通りとなる。
+--def_use_var_list (module単位で解析)
+     → def_use_block (block単位で解析)
+　　　→ def_use_statement (statement単位で解析)
+                → statementのオペレータを基準にswitch..case
+　　　　　　通常の場合、→ def_use_qr (四つ組単位で解析)
+            関数定義や呼び出しの場合、 → def_use_qr (四つ組単位で解析)
+                                          → def_use_operand (オペランド単位で解析)
+　                                  　 → ipa_def_use_for_pa (caller, callee解析?)
+                                                          → 実引数、関数呼び出しの左辺のdef_use
+                                              → map_infoに基づき、def_use
+                                　　(ポインタ解析後、map_infoが更新)
+

@@ -1,0 +1,68 @@
+pointer_analysis_wrapper(解析器)
+
+(1)pointer_analysisはなぜ一つのmoduleしか引数としていないのか。
+(2)call graphを深さ優先順で辿りながらボトムアップで解析を行っているのか？
+  -pointer_analysis_wrapper内部の主な関数呼び出しは以下の通りとなる。
+  --pointer_analysis_wrapper(メイン関数から呼ばれる)
+　  → pointer_analysis(モジュール単位で解析)
+          → pa_infoの初期化、各種のテーブルの初期化
+          → points_to(ブロック単位で解析、本体)
+         → points_to_flow_sensitive(insensitiveもあるけど、ここではsensitiveを参考)
+        　   → ブロックの種類(BB, SB, RB...)を基準に解析。
+              → ここから重要。
+          → relate_map_info_with_block(map_infoの関連付け)
+　  → subid_module(添字解析？)
+　  → def_use_var_list(def_use)
+
+ここで一つ判明したこと：
+*pointer_analysis_wrapperの実行する前に以下の順番が必要とされている。
+  → call_graph_wrapper()
+  → cfa(module_head)
+  → pointer_analysis_wrapper(true)
+*恐らく、まずcfaでcontrol flowを解析して、それよって、module_headのすべてのblockを解析すれば、他のmoduleに飛ぶようになっている？
+*debugして、cfaで得たdom, post_dom, pathをどういうように理解すれば良い？
+
+*-Pcall xxx でcall_graphをxxxに書き込む事ができる。
+
+Call graphからmoduleのcall module(呼び出し関数)を出力する方法：
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+call_graph *cpt;
+Module_table *mpt;
+
+cpt = module_head->call_head;
+while(cpt!=NULL){
+    mpt = cpt->call_module;
+    cpt = cpt->next;
+}
+//ここの部分は再帰的処理に変更する必要がある。
+////////////////////////////////////////////////////////////////////////////////////////////////////////////                                                                                                                                                                                                                 
+
+pointer_analysis_wrapperの中ではmodule_headを引数としているが、恐らくこのmoduleの中に他のmoduleのblockも混ざっている可能性がある。cfaによって処理されている。
+
+試した結果、module_headから他のmoduleに属するblockも解析する事が判明。
+結論的に、flow_sensitive_points_to関数で、判断する事にする。
+条件分岐としては、自関数、及びcall_graph上での子関数をIntSet内部で検索。
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool in_IntSet_call_module(IntSet mpt_IntSet, Module_table *mpt){
+    Call_graph *cpt;
+    Module_table *tmp;
+    cpt = mpt->call_head;
+    while(cpt!=NULL){
+        tmp = cpt ->call_module;
+        if(in_IntSet(mpt_IntSet, tmp->entry))
+            return true;
+        else {
+            cpt = cpt->next;
+        }
+    }    
+    return false;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+if(in_IntSet(mpt_IntSet, mpt->entry )||(in_IntSet_call_module(mpt_IntSet, mpt))) { 
+    解析処理…
+    ...
+}                      
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
