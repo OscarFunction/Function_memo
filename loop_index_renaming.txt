@@ -1,0 +1,79 @@
+loop_index_renaming(リストラクチャリングモジュール)
+
+loop_index_renamingは複数のブロックの間で同じループインデックスが呼ばれている時、依存関係ができてしまうので、indexをrenamingする必要がある。
+条件としては：loop_indexが2回以上使われている。
+                loop_indexは配列変数ではない。
+                loop_indexはブロックの出口で死んでいる。
+
+Renamingする際、変数がcommonで有るかどうかを判断する。
+    commonである：新しく生成したvarは_LMを付ける。
+    commonではない：moduleのvar_tableに新たにvarを追加、renamingされたvarは名称は同じけど、entryは違う。
+
+通常blockごとに解析する。indexが最初のblockで登場したとき、renamingはしないが、IntSetにビットを立てるだけとする。
+二回目以後、同じindexが登場した数だけrenamingし、moduleのvar_tableにvarを追加する。
+
+例えば、以下のプログラムの場合：
+int main(){
+    int i;
+    int a = 0;
+    for(i=0; i<100; i++){
+        a++;
+    }
+    for(i=0; i<100; i++){
+        a++;
+    }
+    for(i=0; i<100; i++){
+        a++;
+    }
+    return 0;
+}
+
+loop_index_renamingする前のvar_tableにあるvarの名称とentryは：
+
+var name is i
+var entry is 1
+var name is a
+var entry is 2
+var name is b
+var entry is 3
+var name is $retvar
+var entry is 4
+
+loop_index_renamingした後のvar_tableにあるvarの名称とentryは：
+
+var name is i
+var entry is 1
+var name is a
+var entry is 2
+var name is b
+var entry is 3
+var name is $retvar
+var entry is 4
+var name is i
+var entry is 5
+var name is i
+var entry is 6
+
+最後にiが二個追加したことが判明できる。
+
+debugにより、var_tableにあるvar_entryはmoduleの中でのvarの順番だと考えてよいでしょう。
+
+これはリストラクチャリングモジュールにより、リストラクチャリングと判別した場合、該当するmoduleを構造変更記録IntSetに追加する。
+ここのmpt_IntSetはグローバル関数であり、リストラクチャリングする前に、一回IntSetをリセットする必要がある。
+
+/////////////////////////////////////////////////////////////////////////
+    int mpt_max_entry;
+    mpt_max_entry = get_max_module_entry(module_head->kind);
+    IntSet  mpt_IntSet;
+    construct_IntSet(mpt_IntSet, mpt_max_entry + 1);
+/////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(!in_IntSet(mpt_IntSet, mpt_entry )) {
+        add1_IntSet(mpt_IntSet, mpt_entry);
+        fprintf(stderr, "module name is renamed\n", NULL);
+    }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
