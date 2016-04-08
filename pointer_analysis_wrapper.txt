@@ -1,4 +1,5 @@
 pointer_analysis_wrapper(解析器)
+//kalfazed say hello!!
 
 (1)pointer_analysisはなぜ一つのmoduleしか引数としていないのか。
 (2)call graphを深さ優先順で辿りながらボトムアップで解析を行っているのか？
