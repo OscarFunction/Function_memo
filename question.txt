@@ -1,0 +1,24 @@
+(Q) = Question
+(L) = Later
+(M) = Memo
+
+(Q)サブルーチンブロックは一体どういうようなblockなのか？関数ブロックの事？
+(Q)adjvar2localの関数は、整合配列の上下限値のvar->kindをMEM_LMにしたのだけれども、整合配列と言うのは何？
+(Q)Hashは一種のマッピングの圧縮と理解した方がいいのでしょうか？
+(Q)common変数とは何？
+(Q)pblockとは何か
+(Q)rb?
+(Q)MEM_LMと普通のMemoryってどう違う？
+
+(L)entry2sub
+(L)search_sb (mp_c_block.c)
+
+(M)/gbl/gbl_var.cにすべてのglobal変数が格納されている。
+(M)まあ、const_list_to_hashは単純に、const_tableの中の内容を全部hash_tableにまとめる。なぜならconstの内容は変更する必要が無いから、まとめて整理する。
+(M)var_tableの中に、module毎にvar_tableが違っていて、var_tableの最後に$retvarが存在する。
+(M)fix_gbl_var、この関数は新しくなったgbl変数をmoduleのすべてのtabelに反映する。
+(M)operandのinnerは添字を意味する
+(M)subid_moduleは配列の添字解析
+(M)arg_headは引数
+(M)フロントエンドで取得した中間コードでは,関数と該当するassign文は同じstatementとして扱われる(例えば？)、これは分類し、Functionを一つのサブルーチンとして扱う必要がある
+(M)SCC = stroongly connected components

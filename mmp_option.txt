@@ -1,0 +1,15 @@
+今回のテストで統一されてmmpオプションをまとめました。
+
+
+-c 2                                //PE数
+-rb2loop                            //ポインタ解析の結果を利用してrbをloopに変換(リストラクチャリング？)
+-Ss                                 //スケジューリング手法をstaticsに変換
+-pa                                 //ポインタ解析
+-macro-task-fusion                  //条件分岐の隠蔽のためのタスク融合(リストラクチャリング？)
+-hexconst                           //浮動小数点変数を16進数で出力する
+-private-1pe-var                    //1peで実行されるmoduleのlocal変数をprivate化
+-prof-3path                         //コストと実行回数の出力コードを生成
+-use-mt-profile-info pr_info_2      //profilez情報の読み込みデータ指定
+-recursive-cost 10                  //再帰呼び出しのコストを指定 (not exist)
+-default-rb-count 1                 //rbブロックの回転数指定 (not exist)
+-default-loop-count 2               //loopブロックの回転数指定
