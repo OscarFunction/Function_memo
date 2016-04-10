@@ -1,0 +1,31 @@
+call_graph_wrapper(解析器)
+
+これはmoduleを引数としている関数である。
+通常call_graph情報はmmpオプションで追加したファイル名に格納される。
+
+memo:
+mpt->call_headの中にこのmoduleが呼んでいるmoduleを格納されている。
+mpt->call_pos_headの中にこのmoduleの呼び出し箇所が格納されている
+
+----------------------------------------------------------------------
+主な関数入り口はmake_call_graph
+
+まず最初にすべてのmoduleに対し初期化する
+初期化する内容はcall_head, call_pos_head、及びnode, list
+
+次に、module単位で関数呼びたしと関数を検索
+call_graph_blk //Block単位で検索
+  -> call_graph_pe //pe_statement単位で検索
+     -> call_graph_stm //statement単位で検索
+　　　  -> call_graph_qr //四つ組単位で検索
+四つ組まで到達できたら、オペレータの種類を判別できるので、
+OPE_CALLとOPE_FUNCによって操作が違ってくる
+そして、qrが所属するstatement、module、及び呼び出しmoduleのリンクを付ける
+
+----------------------------------------------------------------------
+make_sccの部分が良く理解できません。。。。(一度木村教授に聞いてみる)
+make_maxdepthも後日やってみる
+//2016.04.10
+
+
+

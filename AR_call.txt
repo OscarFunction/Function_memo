@@ -1,0 +1,159 @@
+/*
+ * これはmp_mainのmainから呼ばれる関数です。
+ * 中には解析器やリストラクチャリングじゃ無い関数の存在しますが、
+ * 分析しやすいため、全部まとめてみました。
+*/
+
+//After qrfe
+//C: Control
+//R: restucting module
+//A: Analyzer
+//D: Debug
+//
+//------------------------------
+//pointer_analysis_wrapper
+//->pointer_analysis
+//->call_graph_wrapper
+//->subid_module
+//->def_use_var_list
+//->mp_set_loop_var
+//------------------------------
+//
+
+add_option_line              C
+adjvar2local                 ?
+set_module_main              C
+const_list_to_hash           C
+entry2sub                    C
+save_pblock_in_module$B!!(B      C
+adjust_lang_c_cmd_option     C
+
+c_blocking                   R
+---------------------------------------------
+call_graph_wrapper           A              F
+cfa                          A
+pointer_analysis_wrapper     A              F
+subid_module                 R
+---------------------------------------------
+def_use_var_list             A              F
+mp_set_loop_var              A              F
+make_arg_def_use             R
+rb2loop                      R
+---------------------------------------------
+check_interlink              D              N
+call_graph_wrapper           A              Y/A
+specify_char_length          C?
+set_new_io_qr                C?
+blocking                     R
+save_pblock_in_module        R?
+---------------------------------------------
+check_interlink              D              N
+call_graph_wrapper           A              Y/A
+remove_redundant_common      R
+---------------------------------------------
+commutative_processing       ?
+inline_expansion             R
+---------------------------------------------
+check_interlink              D              N
+call_graph_wrapper           A              Y/A
+
+subid_module                 R
+---------------------------------------------
+keep_consistency_bpa         ?
+mp_exp_priv                  ?
+interpret_pc_and_pe_opt      A?
+def_lay_wrapper              A?
+
+call_graph_wrapper           A              Y/A
+cfa                          A
+pointer_analysis_wrapper     A              Y/A
+def_use_var_list             A              Y/A
+mp_set_loop_var              A              Y/A
+make_arg_def_use             A?
+
+dataflow_anal                A
+loop_index_renaming          R              Y/R
+---------------------------------------------
+make_in_out                  A
+make_dda_data                A?
+dolp_dda_wrapper             A
+
+commutative_processing       ?
+
+cost_wrapper                 A
+block_cost                   A
+
+check_directive_before_def_layer ?
+
+def_layer_wrapper            A
+check_interlink              D              N
+
+//macro_task_fusion_flg
+preprocess_for_macro_task_fusion R
+---------------------------------------------
+call_graph_wrapper           A              Y/A
+subid_module                 R
+---------------------------------------------
+cfa                          A
+pointer_analysis_wrapper     A              Y/A
+def_use_var_list             A              Y/A
+mp_set_loop_var              A              Y/A
+make_arg_def_use             A
+dataflow_anal                A
+make_in_out                  A
+make_dda_data                A
+
+macro_tast_fusion            R
+---------------------------------------------
+call_graph_wrapper           A              Y/A
+subid_module                 R
+cfa                          A
+pointer_analysis_wrapper     A              Y/A
+def_use_var_list             A              Y/A
+mp_set_loop_var              A              Y/A
+make_arg_def_use             A
+dataflow_anal                A
+make_in_out                  A
+make_dda_data                A
+
+ncc_wrapper                  A
+
+mtgen                        ?
+check_interlink              D             N
+
+//:8140 Control flow ana2
+
+以上の内容をまとめると(CとDを除いて...)、大体こういう感じになっています:
+-----------------------------
+Aを幾つかする
+Rを幾つかする
+-----------------------------
+すなわち、リストラクチャリングする前に必ず解析をする。
+しかし、重複する解析器は全部解析する必要が無く、前回のリストラクチャリングをしたモジュールのみ実行すれば良い。
+
+これを実装するために、これらの内容が必要
+
+(i)解析器毎にbool first_analysis変数が必要
+//defaultの値はtrue、一回目の解析は必ず必要
+
+(ii)gblにIntSet mpt_list変数が必要
+//リストラクチャリングをした後、module->entryをこのIntSetに加える
+
+(iii)bool in_IntSet(mpt_list, mpt->entry)
+//本moduleがIntSetに有るかどうかの判断
+
+(iv)bool in_IntSet(mpt_list, mpt_sub->entry)
+//子関数がIntSetに有るかどうかの判断
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,6 +1,7 @@
 (Q) = Question
 (L) = Later
 (M) = Memo
+(C) = Change
 
 (Q)サブルーチンブロックは一体どういうようなblockなのか？関数ブロックの事？
 (Q)adjvar2localの関数は、整合配列の上下限値のvar->kindをMEM_LMにしたのだけれども、整合配列と言うのは何？
@@ -9,6 +10,9 @@
 (Q)pblockとは何か
 (Q)rb?
 (Q)MEM_LMと普通のMemoryってどう違う？
+(Q)def_use_var_listで同じmoduleを何回も呼んでいる？
+(Q)四つ組のオペレータの中のOPE_CALLとOPE_FUNCの違いはどこになる？
+(Q)mp_make_dda_data:193
 
 (L)entry2sub
 (L)search_sb (mp_c_block.c)
@@ -22,3 +26,12 @@
 (M)arg_headは引数
 (M)フロントエンドで取得した中間コードでは,関数と該当するassign文は同じstatementとして扱われる(例えば？)、これは分類し、Functionを一つのサブルーチンとして扱う必要がある
 (M)SCC = stroongly connected components
+(M)block->pre_head: ブロックの前処理文へのポインタ
+(M)Pos_list: コールポジションリスト、call_graphに使われる
+
+(C)
+
+
+
+
+

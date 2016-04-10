@@ -1,0 +1,7 @@
+check_interlink(解析器)
+
+主にデバッグ用
+module, block, pe_statement, statement, quadruple
+の兄弟関係、親関係のリングを出力する
+
+
