@@ -67,3 +67,129 @@ if(in_IntSet(mpt_IntSet, mpt->entry )||(in_IntSet_call_module(mpt_IntSet, mpt)))
 }                      
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+------------------------------04/19----------------------------------------
+ポインタ解析の内容はmodule毎に、pa_infoと言うポインタ解析情報を格納している
+block毎にin_pa_infoとout_pa_infoがある
+(Q)ig = innovation graph、これはポインタ解析で使われ、いわゆるmodule関の呼び出しと似ている?
+(A)コールグラフの内容だと、クローン情報が反映されない。
+
+
+(iii)ポインタ再解析の実装
+
+(step1  ->  削除と作成)
+
+**(A)現状のまとめ
+-ポインタ解析器では、最初の解析で必要な箇所でクローンをしている。
+ そしてそのままigにクローン情報を保存して、コールグラフ上では反映しない事になっている。
+ すなわち、igの操作をすれば、再解析する必要のあるnodeとそうでないnodeの区別が出来る。
+ しかし、再度ポインタ解析を開始するとき、いろんな初期化をし、そのうちig_tableとig_headも初期化していまう。
+ 初期化したあと、またコールグラフを辿って、ig_nodeの親子関係を築きながらig_tableを作成。
+ すべてを初期化してから再解析をすると、解析をしていないmoudle、もしくはig_nodeに参照される場合があるので、参照先がNULLになりエラー
+ この場合、ig_tableの「削除」と「作成」を指定したmoduleのig_nodeに対してのみ実行すれば良いと考える。
+
+-初期化では以下の手順：
+ destruct_iv_table(mhead)   //iv_tableとheap_tableの初期化
+ init_pa_info(mhead)        //module_head(main関数のpa_infoの初期化)
+ init_pa_info_cache()
+ init_invocation_graph(ig_node_head) //ig_node_headからスタートしてすべてのig_nodeのig_infoを解放する
+ 
+-再度作成は以下の手順
+ ig_node_head = build_invocation_graph(mhead)
+
+**(B)修正部分
+-ポインタ解析する時、igの概念が投入され、これはcall graphと似ているが、より複雑、call_graphを参照して作ったもの
+ よって、mpt_list以外に、ig_node_listとig_info_listというig_nodeを記録したIntSetとig_infoを記録したIntSetを導入
+ mpt->entryでmpt_listに登録しているように、ig_node->entryを使用する。
+
+-destruct_iv_tableはmodule単位で検索しているので、mpt_listに自関数とcall_graph上の子関数があるかをチェックすればいい。
+ if(in_IntSet(mpt_IntSet, mpt->entry )||(in_IntSet_call_module(mpt_IntSet, mpt))) { 
+    //iv_table, heap_table初期化作業…
+    ...
+ } 
+
+-init_pa_infoとinit_pa_info_cacheはmain関数に対する処理なので、変更する必要が無いかと
+
+-init_invocation_graph(ig_node_head)の場合、ig_info,ig_nodeを初期化している。
+ それぞれにわけて説明する
+--(i)ig_info
+---ig_tbl->next->head->moduleがmpt_listに登録されているかをチェックすればいい。
+ mpt = ig_tbl->next->head->module;
+ if(in_IntSet(mpt_IntSet, mpt->entry )||(in_IntSet_call_module(mpt_IntSet, mpt))) { 
+     //ig_infoの初期化作業…
+     ...
+     //ig_info_listに変更記録を書き込む
+ } 
+--(ii)ig_node
+---ig_node->org_info->moduleでこのノードはどの関数のものかを分かるので、mptを設定してから判断処理
+ mpt = ig_node->org_info->module
+ if(in_IntSet(mpt_IntSet, mpt->entry )||(in_IntSet_call_module(mpt_IntSet, mpt))) { 
+     //ig_node初期化作業…
+     ...
+     //ig_node_listに変更記録を書き込む
+ } 
+
+
+-build_invocation_graphは少し複雑
+--まずinit_ig_tableではig_tblをすべて一から作っているが、これもmodule毎にig_tblを作成しているので、処理の判断を以上の実装と同じ。
+--次にmake_ig_nodeでmainのノードを作成しているが、これは必要無いかと
+--最後にgen_igで再帰的にinvocation_graphを作成している。
+---gen_igでは、コールグラフを参照し、main関数の中で呼ばれている関数毎にig_nodeを作成、
+　 さらに、その関数の中でまた別の関数を呼ぶことになったら、再帰的にgen_igを呼ぶ
+ for(cg = func_list; cg != NULL; cg = cg->next){
+        func = cg->call_module;
+        if(func == NULL)
+            continue;
+        new_ig_node = make_ig_node(ig_node, func, cg->stm);
+        ...
+ }
+---以上の段階で、funcはmpt_listで登録されているかどうかをチェックすればいい。
+   登録されていなければ、新しいnodeを作成しなくても、以前のnodeを使用してもいい
+
+**以上で初期化終わったので、正式にポインタ解析本体に入れる
+ call graphみたいにinvacation graphをファイルに出力出来る関数ってあるかな？あると便利!
+
+(step2  ->  入出力チェック)(実装中)
+**(A)現状のまとめ
+-ポインタ解析の場合、blockがsbの場合、func_point_to関数ポインタ解析を始める。
+ 関数ポインタ解析をする際、caller(呼び出し側)、callee(呼ばれる側)、iv_table(不可視変数を格納するtable)等の概念が導入する
+ 通常多数(複数)のcallerが少数(1)のcalleeに対応しているが、calleeがcaller毎にiv_tableを作成する。
+ そしてiv_table毎にpa_object型のivを作成し、callerがivとやりとりをしている。
+ しかし、関数ポインタの場合、calleeが変更をしている時、関数ポインタとしてcallerが呼んでおり、call graph上では反映されないため、
+ callerを含むmoduleが変更されてない事になり、再解析をしないようになっている。
+ よって、解決案としては、callerが対応しているivのin_pa_infoとout_pa_infoが変更しているかどうかをチェックすれば良いと考える
+
+**(B)変更点
+
+
+
+(step3  ->  テスト及びデバッグ)
+**幾つかの小規模のサンプルプログラムと大規模のテストプログラムそれぞれに分けてテストしてみる
+-sample1
+--type
+ BLOCK{
+     BB 
+ }
+--result
+ clear
+
+-sample2
+--type
+ BLOCK{
+    BB
+    RB
+ }
+--result
+ clear
+
+-sample3
+--type
+ BLOCK{
+    BB
+    RB
+    SB
+ }
+--result 
+ fail
+
+

@@ -3,7 +3,8 @@
 (M) = Memo
 (C) = Change
 
-(Q)サブルーチンブロックは一体どういうようなblockなのか？関数ブロックの事？
+(Q)サブルーチンブロックは一体どういうようなblockなのか？
+(A)関数呼び出しブロック
 (Q)adjvar2localの関数は、整合配列の上下限値のvar->kindをMEM_LMにしたのだけれども、整合配列と言うのは何？
 (Q)Hashは一種のマッピングの圧縮と理解した方がいいのでしょうか？
 (Q)common変数の詳しい説明が欲しい？
@@ -15,8 +16,26 @@
 (Q)四つ組のオペレータの中のOPE_CALLとOPE_FUNCの違いはどこになる？
 (Q)mp_make_dda_data:193
 
+(Q)SCHE_STATICはどういう意味？
+(A)条件分岐とかの場合、scheduleがダイナミックに変更しているので。staticにする
+(Q)hmdfとは？
+(Q)paramとは?
+(A)parameter
+(Q)ncfsucとはblockの後続タスクであり、どうしてncfsucが複数あると、分岐グループであるのが分かるのか？
+(A)集結出来るから
+(QQ)解析器は果たしてmoduleを対象にした方がいいのか、それともblockを対象にした方がいい？
+(Q)ig_nodeとはなにか?
+(A)論文を読むこと。間瀬さん
+(Q)calleeとcallerのどっちが関数呼び出し?
+(Q)block->acc_block_flgはヘテロ用ブロックとアクセラレータ用ブロックと書いているが、どういうこと？
+(Q)igはig_nodeのmode{APPROXIMATE, RECURSIVE, ORDINARY}によって、再帰的にigを作成するかを判断している。でも、これは、moduleの中に他のmoduleがあるかで判断するのでは？
+(Q)func_pointの中で、もしig_nodeがNullの場合、関数ポインタだと分かるのだが、これはなぜ？
+(A)関数ポインタに対して、ig_nodeが生成されていないから
+(Q)free_ig_nodeで、もしparent_node->child == NULLだったら、returnのはなぜ？
+
 (L)entry2sub
 (L)search_sb (mp_c_block.c)
+(L)call graphとinvocation graphの違いとまとめましょう
 
 (M)/gbl/gbl_var.cにすべてのglobal変数が格納されている。
 (M)まあ、const_list_to_hashは単純に、const_tableの中の内容を全部hash_tableにまとめる。なぜならconstの内容は変更する必要が無いから、まとめて整理する。
@@ -30,6 +49,26 @@
 (M)先のSCCに関連するメモで、これはいわゆる幾つかのcomponentsが関連性が高い
 (M)block->pre_head: ブロックの前処理文へのポインタ
 (M)Pos_list: コールポジションリスト、call_graphに使われる
+(M)Block内部の整理
+---------Block{
+---------    BB{
+---------        //statementの集まり
+---------    }
+---------    SB{
+---------        //関数呼び出し
+---------    }
+---------    RB{
+---------        //ループ可能ブロック
+---------    }
+---------    //これらのBB,SB,RBは全部Blockにとってのinner
+---------}                                                
+(M)cf = control flow
+(M)cfpre = 先行ブロックへのポインタの配列
+(M)cfsuc = 後続ブロックへのポインタの配列
+(M)ncfpre = 先行タスク数
+(M)ncfsuc = 後続タスク数
+
+
 
 (C)
 
