@@ -1,32 +1,24 @@
 /*
  * これはmp_mainのmainから呼ばれる関数です。
- * 中には解析器やリストラクチャリングじゃ無い関数の存在しますが、
+ * 中には解析器やリストラクチャリングじゃ無い関数も存在しますが、
  * 分析しやすいため、全部まとめてみました。
 */
 
-//After qrfe
-//C: Control
-//R: restucting module
-//A: Analyzer
-//D: Debug
-//
-//------------------------------
-//pointer_analysis_wrapper
-//->pointer_analysis
-//->call_graph_wrapper
-//->subid_module
-//->def_use_var_list
-//->mp_set_loop_var
-//------------------------------
+//C: Control(制御用)
+//R: restucting module(リストラクチャリングモジュール)
+//A: Analyzer(解析器)
+//D: Debug(デバッグ用情報を出力する)
 //
 
-add_option_line              C
-adjvar2local                 ?
-set_module_main              C
-const_list_to_hash           C
-entry2sub                    C
-save_pblock_in_module$B!!(B      C
-adjust_lang_c_cmd_option     C
+//After qrfe
+
+add_option_line              X
+adjvar2local                 X
+set_module_main              X
+const_list_to_hash           X
+entry2sub                    X
+save_pblock_in_module        X
+adjust_lang_c_cmd_option     X
 
 c_blocking                   R
 ---------------------------------------------
@@ -41,58 +33,48 @@ rb2loop                      R
 ---------------------------------------------
 check_interlink              D              N
 call_graph_wrapper           A              Y/A
-specify_char_length          C?
-set_new_io_qr                C?
+specify_char_length          X
+set_new_io_qr                X
 blocking                     R
-save_pblock_in_module        R?
+save_pblock_in_module        X
 ---------------------------------------------
 check_interlink              D              N
 call_graph_wrapper           A              Y/A
 remove_redundant_common      R
 ---------------------------------------------
-commutative_processing       ?
+commutative_processing       X
 inline_expansion             R
 ---------------------------------------------
 check_interlink              D              N
 call_graph_wrapper           A              Y/A
-
-subid_module                 R
----------------------------------------------
-keep_consistency_bpa         ?
-mp_exp_priv                  ?
-interpret_pc_and_pe_opt      A?
-def_lay_wrapper              A?
-
+subid_module                 A
+keep_consistency_bpa         A
+mp_exp_priv                  A
+interpret_pc_and_pe_opt      A
+def_lay_wrapper              A
 call_graph_wrapper           A              Y/A
 cfa                          A
 pointer_analysis_wrapper     A              Y/A
 def_use_var_list             A              Y/A
 mp_set_loop_var              A              Y/A
-make_arg_def_use             A?
-
+make_arg_def_use             A
 dataflow_anal                A
 loop_index_renaming          R              Y/R
 ---------------------------------------------
 make_in_out                  A
-make_dda_data                A?
+make_dda_data                A
 dolp_dda_wrapper             A
-
-commutative_processing       ?
-
+commutative_processing       X
 cost_wrapper                 A
 block_cost                   A
-
-check_directive_before_def_layer ?
-
+check_directive_before_def_layer X
 def_layer_wrapper            A
 check_interlink              D              N
 
-//macro_task_fusion_flg
 preprocess_for_macro_task_fusion R
 ---------------------------------------------
 call_graph_wrapper           A              Y/A
 subid_module                 A
----------------------------------------------
 cfa                          A
 pointer_analysis_wrapper     A              Y/A
 def_use_var_list             A              Y/A
@@ -101,11 +83,10 @@ make_arg_def_use             A
 dataflow_anal                A
 make_in_out                  A
 make_dda_data                A
-
 macro_tast_fusion            R
 ---------------------------------------------
 call_graph_wrapper           A              Y/A
-subid_module                 R
+subid_module                 A
 cfa                          A
 pointer_analysis_wrapper     A              Y/A
 def_use_var_list             A              Y/A
@@ -116,11 +97,26 @@ make_in_out                  A
 make_dda_data                A
 
 ncc_wrapper                  A
-
-mtgen                        ?
+mtgen                        X
 check_interlink              D             N
 
-//:8140 Control flow ana2
+//:8140 残りの部分の関数はまでコードの内容は確認しておりません
+今週中に終わらせたいです
+
+
+追記として、以上の内容の中で、
+pointer_analysis_wrapper関数内部の構造では
+//------------------------------
+//pointer_analysis_wrapper
+//->pointer_analysis
+//->call_graph_wrapper
+//->subid_module
+//->def_use_var_list
+//->mp_set_loop_var
+//------------------------------
+になっておりまして、内部で呼ばれている関数がpointer_analysis_wrapper外部でもすぐ呼ばれているケースも幾つかありましたので、
+ここの部分は必要なのでしょうか？
+
 
 以上の内容をまとめると(CとDを除いて...)、大体こういう感じになっています:
 -----------------------------
